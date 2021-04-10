@@ -1,19 +1,66 @@
+import pyglet
+import math
 from pyglet import shapes
+from constants import Constants
 
 class Bullet:
-    x = -1
-    y = -1
-    x_diff = -1
-    y_diff = -1
-    speed = 5
-    bullet = shapes.Circle(200, 300, 5, color=(155, 0, 0))
+    x = 0
+    y = 0
+    dir = 0
+    r = 1
 
-    def __init__(self, x, y, x_diff, y_diff, batch):
+    x_speed = 0
+    y_speed = 0
+
+    bullet = pyglet.shapes.Circle(400, 400, r, color=(0, 0, 0))
+
+    def __init__(self, x, y, dir):
         self.x = x
         self.y = y
-        self.x_diff = x_diff
-        self.y_diff = y_diff
+        self.dir = dir
 
-        self.bullet = shapes.Circle(x, y, 20, color=(155, 0, 0), batch=batch)
+        if self.dir == 0 or self.dir == 360:
+            self.y_speed = Constants.BULLET_SPEED
+            self.x_speed = 0
+        elif self.dir == 90:
+            self.x_speed = Constants.BULLET_SPEED
+            self.y_speed = 0
+        elif self.dir == 180:
+            self.y_speed = Constants.BULLET_SPEED
+            self.x_speed = 0
+        elif self.dir == 270:
+            self.x_speed = Constants.BULLET_SPEED
+            self.y_speed = 0
+        else: 
+            hyp = Constants.BULLET_SPEED
+            angle = self.dir % 90
+            x_diff = abs(math.cos(math.radians(angle)) * hyp)
+            y_diff = abs(math.sin(math.radians(angle)) * hyp)
+            if self.dir > 180:
+                self.x_speed -= x_diff
+            else:
+                self.x_speed += x_diff
+            if self.dir > 90 and self.dir < 270:
+                self.y_speed -= y_diff
+            else:
+                self.y_speed += y_diff
+        self.bullet = pyglet.shapes.Circle(x, y, self.r, color=(255, 255, 255))
 
+    def draw(self):
         self.bullet.draw()
+
+    def check_for_offscreen(self):
+        if self.x < 0:
+            self.x = Constants.WINDOW_WIDTH
+        if self.x > Constants.WINDOW_WIDTH:
+            self.x = 0
+        if self.y < 0:
+            self.y = Constants.WINDOW_HEIGHT
+        if self.y > Constants.WINDOW_HEIGHT:
+            self.y = 0
+
+    def move(self, dt):
+        self.x += self.x_speed * dt
+        self.y += self.y_speed * dt
+        self.check_for_offscreen()
+        self.bullet = pyglet.shapes.Circle(self.x, self.y, self.r, color=(255, 255, 255))

@@ -1,64 +1,96 @@
 import pyglet
 import math
-from bullet import Bullet
 from pyglet import shapes
 from constants import Constants
 
 class Player: 
-    x_pos = 400
-    y_pos = 400
-    x_speed = Constants.X_MOVEMENT_SPEED
-    y_speed = Constants.Y_MOVEMENT_SPEED
+    x_pos = Constants.WINDOW_WIDTH // 2
+    y_pos = Constants.WINDOW_HEIGHT // 2
+    x_speed = 0
+    y_speed = 0
     rotation = 0
     batch = object
 
     player_img = pyglet.image.load("player.png")
     player_img.anchor_x = player_img.width // 2
-    player_img.anchor_y = player_img.height
+    player_img.anchor_y = player_img.height // 2
 
     player = pyglet.sprite.Sprite(player_img, x=x_pos, y=y_pos)
 
     def __init__(self, window, batch):
-        self.player.update(scale=0.75)
         self.batch = batch
         self.player = pyglet.sprite.Sprite(self.player_img, x=self.x_pos, y=self.y_pos, batch=batch)
-
-    def shoot(self):
-        bullet = shapes.Circle(self.x_pos, self.y_pos, 3, color=(255, 255, 255), batch = self.batch)
-
+        self.player.update(scale=0.75)
+        
     def calc_speed(self):
-        angle = self.rotation % 90
-        if angle == 0:
-            if self.rotation == 0 or self.rotation == 180:
-                self.x_speed = 0
-                self.y_speed = Constants.Y_MOVEMENT_SPEED
+        if self.rotation == 0 or self.rotation == 360:
+            self.y_speed += Constants.MOVEMENT_SPEED
+        elif self.rotation == 90:
+            self.x_speed += Constants.MOVEMENT_SPEED
+        elif self.rotation == 180:
+            self.y_speed -= Constants.MOVEMENT_SPEED
+        elif self.rotation == 270:
+            self.x_speed -= Constants.MOVEMENT_SPEED
+        else: 
+            hyp = Constants.MOVEMENT_SPEED
+            x = -1
+            y = -1
+            angle = self.rotation % 90
+            x = abs(math.cos(math.radians(angle)) * hyp)
+            y = abs(math.sin(math.radians(angle)) * hyp)
+            if self.rotation > 180:
+                self.x_speed -= x
             else:
-                self.y_speed = 0
-                self.x_speed = Constants.X_MOVEMENT_SPEED
-        else:
-            self.x_speed = abs(math.cos(angle)*5)
-            self.y_speed = abs(math.sin(angle)*5)
-        if self.rotation > 180:
-            self.x_speed *= -1
-        if self.rotation > 90 and self.rotation < 270:
-            self.y_speed *= -1
-        print("ROTATION: " + str(self.rotation) + " (" + str(angle) + "); X_SPEED: " + str(self.x_speed) + "; Y_SPEED: " + str(self.y_speed))
+                self.x_speed += x
+            if self.rotation > 90 and self.rotation < 270:
+                self.y_speed -= y
+            else:
+                self.y_speed += y
+        if self.x_speed < -Constants.MAX_SPEED:
+            self.x_speed = -Constants.MAX_SPEED
+        if self.x_speed > Constants.MAX_SPEED:
+            self.x_speed = Constants.MAX_SPEED
+        if self.y_speed < -Constants.MAX_SPEED:
+            self.y_speed = -Constants.MAX_SPEED
+        if self.y_speed > Constants.MAX_SPEED:
+            self.y_speed = Constants.MAX_SPEED
 
-    def move(self, symbol, dt):
-        if symbol == 119:
+    def check_for_offscreen(self):
+        if self.x_pos < 0:
+            self.x_pos = Constants.WINDOW_WIDTH
+        if self.x_pos > Constants.WINDOW_WIDTH:
+            self.x_pos = 0
+        if self.y_pos < 0:
+            self.y_pos = Constants.WINDOW_HEIGHT
+        if self.y_pos > Constants.WINDOW_HEIGHT:
+            self.y_pos = 0
+            
+    def move(self, dt, keys):
+        if keys[0]:
             self.calc_speed()
-            self.y_pos += self.y_speed * dt
-            self.x_pos += self.x_speed * dt
-        if symbol == 97:
+        else:
+            if abs(self.x_speed) - 0.02 <= 0:
+                self.x_speed = 0
+            elif self.x_speed < 0:
+                self.x_speed += Constants.FRICTION * dt
+            elif self.x_speed > 0:
+                self.x_speed -= Constants.FRICTION * dt
+            if abs(self.y_speed) - 0.02 <= 0:
+                self.y_speed = 0
+            elif self.y_speed < 0:
+                self.y_speed += Constants.FRICTION * dt
+            elif self.y_speed > 0:
+                self.y_speed -= Constants.FRICTION * dt
+        if keys[1]:
             self.rotation -= Constants.ROTATION_SPEED
             if self.rotation < 0:
                 self.rotation = 360
-        if symbol == 100:
+        if keys[2]:
             self.rotation += Constants.ROTATION_SPEED
             if self.rotation > 360:
                 self.rotation = 0
-        if symbol == 32:
-            self.shoot()
-        print(str(self.y_pos))
+        self.x_pos += self.x_speed * dt
+        self.y_pos += self.y_speed * dt
+        self.check_for_offscreen()
+        # print("ROTATION: " + str(self.rotation) + "; X_SPEED: " + str(self.x_speed) + "; Y_SPEED: " + str(self.y_speed))
         self.player.update(x=self.x_pos, y=self.y_pos, rotation=self.rotation)
-        self.player.draw()
