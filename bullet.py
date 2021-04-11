@@ -26,10 +26,10 @@ class Bullet:
             self.x_speed = Constants.BULLET_SPEED
             self.y_speed = 0
         elif self.dir == 180:
-            self.y_speed = Constants.BULLET_SPEED
+            self.y_speed = -Constants.BULLET_SPEED
             self.x_speed = 0
         elif self.dir == 270:
-            self.x_speed = Constants.BULLET_SPEED
+            self.x_speed = -Constants.BULLET_SPEED
             self.y_speed = 0
         else: 
             hyp = Constants.BULLET_SPEED
@@ -37,8 +37,14 @@ class Bullet:
             x_diff = abs(math.cos(math.radians(angle)) * hyp)
             y_diff = abs(math.sin(math.radians(angle)) * hyp)
             if self.dir > 180:
+                if self.dir < 270:
+                    x_diff = abs(math.sin(math.radians(angle)) * hyp)
+                    y_diff = abs(math.cos(math.radians(angle)) * hyp)
                 self.x_speed -= x_diff
             else:
+                if self.dir < 90:
+                    x_diff = abs(math.sin(math.radians(angle)) * hyp)
+                    y_diff = abs(math.cos(math.radians(angle)) * hyp)
                 self.x_speed += x_diff
             if self.dir > 90 and self.dir < 270:
                 self.y_speed -= y_diff

@@ -10,18 +10,29 @@ class Player:
     y_speed = 0
     rotation = 0
     batch = object
+    thrust = False
 
-    player_img = pyglet.image.load("player.png")
+    player_img = pyglet.image.load("res/player.png")
     player_img.anchor_x = player_img.width // 2
     player_img.anchor_y = player_img.height // 2
+
+    player_thrust_img = pyglet.image.load("res/player_thrust.png")
+    player_thrust_img.anchor_x = player_thrust_img.width // 2
+    player_thrust_img.anchor_y = player_thrust_img.height // 2
 
     player = pyglet.sprite.Sprite(player_img, x=x_pos, y=y_pos)
 
     def __init__(self, window, batch):
         self.batch = batch
         self.player = pyglet.sprite.Sprite(self.player_img, x=self.x_pos, y=self.y_pos, batch=batch)
-        self.player.update(scale=0.75)
         
+    def toggle_sprite(self):
+        if self.thrust:
+            self.player = pyglet.sprite.Sprite(self.player_thrust_img, x=self.x_pos, y=self.y_pos, batch=self.batch)
+        else:
+            self.player = pyglet.sprite.Sprite(self.player_img, x=self.x_pos, y=self.y_pos, batch=self.batch)
+        self.player.update(rotation=self.rotation)
+
     def calc_speed(self):
         if self.rotation == 0 or self.rotation == 360:
             self.y_speed += Constants.MOVEMENT_SPEED
@@ -33,14 +44,18 @@ class Player:
             self.x_speed -= Constants.MOVEMENT_SPEED
         else: 
             hyp = Constants.MOVEMENT_SPEED
-            x = -1
-            y = -1
             angle = self.rotation % 90
             x = abs(math.cos(math.radians(angle)) * hyp)
             y = abs(math.sin(math.radians(angle)) * hyp)
             if self.rotation > 180:
+                if self.rotation < 270:
+                    x = abs(math.sin(math.radians(angle)) * hyp)
+                    y = abs(math.cos(math.radians(angle)) * hyp)
                 self.x_speed -= x
             else:
+                if self.rotation < 90:
+                    x = abs(math.sin(math.radians(angle)) * hyp)
+                    y = abs(math.cos(math.radians(angle)) * hyp)
                 self.x_speed += x
             if self.rotation > 90 and self.rotation < 270:
                 self.y_speed -= y
@@ -82,11 +97,11 @@ class Player:
             elif self.y_speed > 0:
                 self.y_speed -= Constants.FRICTION * dt
         if keys[1]:
-            self.rotation -= Constants.ROTATION_SPEED
+            self.rotation -= Constants.ROTATION_SPEED * dt
             if self.rotation < 0:
                 self.rotation = 360
         if keys[2]:
-            self.rotation += Constants.ROTATION_SPEED
+            self.rotation += Constants.ROTATION_SPEED * dt
             if self.rotation > 360:
                 self.rotation = 0
         self.x_pos += self.x_speed * dt
