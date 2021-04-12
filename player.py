@@ -107,5 +107,15 @@ class Player:
         self.x_pos += self.x_speed * dt
         self.y_pos += self.y_speed * dt
         self.check_for_offscreen()
-        # print("ROTATION: " + str(self.rotation) + "; X_SPEED: " + str(self.x_speed) + "; Y_SPEED: " + str(self.y_speed))
         self.player.update(x=self.x_pos, y=self.y_pos, rotation=self.rotation)
+
+    # OOP
+    def get_x(self):
+        return self.x_pos
+    
+    def get_y(self):
+        return self.y_pos
+
+    # 25x36 object doesn't exactly have a radius, so approximate
+    def get_radius(self):
+        return (36 + 25) / 2

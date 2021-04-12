@@ -70,3 +70,13 @@ class Bullet:
         self.y += self.y_speed * dt
         self.check_for_offscreen()
         self.bullet = pyglet.shapes.Circle(self.x, self.y, self.r, color=(255, 255, 255))
+
+    # OOP
+    def get_x(self):
+        return self.x
+    
+    def get_y(self):
+        return self.y
+        
+    def get_radius(self):
+        return self.r

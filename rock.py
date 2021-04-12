@@ -13,6 +13,8 @@ class Rock:
     x_speed = 0
     y_speed = 0
     asteroid_img = random.choice(Constants.LARGE_ASTEROID_SPRITES)
+    asteroid_img.anchor_x = asteroid_img.width // 2
+    asteroid_img.anchor_y = asteroid_img.height // 2
     asteroid = pyglet.sprite.Sprite(asteroid_img, x=400, y=400)
 
     def __init__(self, x, y, level, dir):
@@ -89,3 +91,13 @@ class Rock:
             self.rot = self.rot - 360
         self.check_for_offscreen()
         self.asteroid.update(x=self.x, y=self.y, rotation=self.rot)
+    
+    # OOP
+    def get_x(self):
+        return self.x
+    
+    def get_y(self):
+        return self.y
+        
+    def get_radius(self):
+        return self.r
