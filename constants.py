@@ -14,6 +14,9 @@ class Constants:
     FRICTION = 20
     BULLET_SPEED = 600
     BULLET_LIFETIME = 60
+    MIN_PARTICLE_SPEED = 10
+    MAX_PARTICLE_SPEED = 100
+    PARTICLE_LIFETIME = 40
 
     # Space Objects (?)
     SMALL_ASTEROID_SPRITES = [pyglet.image.load("res/small/small_roid_1.png"), pyglet.image.load("res/small/small_roid_2.png"), pyglet.image.load("res/small/small_roid_3.png")]

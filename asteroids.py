@@ -8,12 +8,16 @@ from player import Player
 from pyglet.window import key
 from pyglet import font
 from rock import Rock
+from animation import Animation
 
 global game_started
 game_started = False
 
 window = pyglet.window.Window(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT, "Asteroids")
-window.set_icon(pyglet.image.load("res/icon.png"))
+
+icon = pyglet.image.load("res/icon.png")
+
+window.set_icon(icon, icon)
 main_batch = pyglet.graphics.Batch()
 #         W      A      D
 keys = [False, False, False]
@@ -21,11 +25,31 @@ keys = [False, False, False]
 player = Player(window, main_batch)
 bullets = []
 bullet_times = []
+particles = []
+particles_times = []
 
 asteroids = []
 
 def collided(obj1, obj2):
     return abs(math.sqrt((obj1.get_x() - obj2.get_x()) ** 2 + (obj1.get_y() - obj2.get_y()) ** 2) - obj1.get_radius() - obj2.get_radius()) <= 5
+
+def explode(x, y, player):
+    if player:
+        particles.append(Animation(x, y, True))
+        particles_times.append(0)
+    else:
+        # Explosion animation
+        particles.extend([
+            Animation(x, y, random.randint(0, 360), False), 
+            Animation(x, y, random.randint(0, 360), False), 
+            Animation(x, y, random.randint(0, 360), False), 
+            Animation(x, y, random.randint(0, 360), False), 
+            Animation(x, y, random.randint(0, 360), False), 
+            Animation(x, y, random.randint(0, 360), False), 
+            Animation(x, y, random.randint(0, 360), False), 
+            Animation(x, y, random.randint(0, 360), False)
+            ])
+        particles_times.extend([0, 0, 0, 0, 0, 0, 0, 0])
 
 @window.event
 def on_key_press(symbol, modifiers):
@@ -91,10 +115,11 @@ def update(dt):
     while i < len(asteroids):
         asteroids[i].move(dt)
         if collided(player, asteroids[i]):  
-            print("DEATH")
+            explode(player.x_pos, player.y_pos, True)
         else:
-            for bullet in bullets:
-                if collided(asteroids[i], bullet):
+            j = 0
+            while j < len(bullets):
+                if collided(asteroids[i], bullets[j]):
                     if asteroids[i].level > 1:
                         asteroids.append(
                             Rock(
@@ -110,10 +135,16 @@ def update(dt):
                                 asteroids[i].level-1, 
                                 random.choice([random.randint(-250, -30), random.randint(30, 250)]))
                         )
+                    explode(asteroids[i].x, asteroids[i].y, False)
                     asteroids.pop(i)
                     i -= 1
+                    bullets.pop(j)
+                    bullet_times.pop(j)
                     break
+                j += 1
         i += 1
+    for particle in particles:
+        particle.move(dt)
 
 pyglet.clock.schedule_interval(update, 1/60.0) # update at 60Hz
 
@@ -151,6 +182,15 @@ def on_draw():
             else: 
                 bullets[i].draw()
                 bullet_times[i] += 1
+                i += 1
+        i = 0
+        while i < len(particles):
+            if particles_times[i] > Constants.PARTICLE_LIFETIME: 
+                particles.pop(i)
+                particles_times.pop(i)
+            else: 
+                particles[i].draw()
+                particles_times[i] += 1
                 i += 1
         for asteroid in asteroids:
             asteroid.draw()
