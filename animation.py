@@ -10,14 +10,12 @@ class Animation:
     x_speed = 0
     y_speed = 0
     dir = 0
-    is_line = False
     obj = shapes.Circle(0, 0, 0, color=(255, 255, 255))
 
-    def __init__(self, x, y, dir, is_line):
+    def __init__(self, x, y, dir):
         self.x = x
         self.y = y
         self.dir = dir
-        self.is_line = is_line
 
         speed = random.randint(Constants.MIN_PARTICLE_SPEED, Constants.MAX_PARTICLE_SPEED)
         if self.dir == 0 or self.dir == 360:
@@ -52,10 +50,7 @@ class Animation:
             else:
                 self.y_speed += y_diff
 
-        if is_line:
-            print("DA")
-        else:
-            self.obj = shapes.Circle(x, y, 1, color=(0, 0, 0))
+        self.obj = shapes.Circle(x, y, 1, color=(0, 0, 0))
 
     def draw(self):
         self.obj.draw()
