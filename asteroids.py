@@ -10,10 +10,16 @@ from pyglet import font
 from rock import Rock
 from animation import Animation
 
-global game_started
-game_started = False
+global game_running
+game_running = False
 global lives
 lives = 3
+global reset
+reset = True
+global hidden
+hidden = True
+global t
+t = time.time()
 
 window = pyglet.window.Window(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT, "Asteroids")
 
@@ -45,76 +51,89 @@ def collided(obj1, obj2):
     return abs(math.sqrt((obj1.get_x() - obj2.get_x()) ** 2 + (obj1.get_y() - obj2.get_y()) ** 2) - obj1.get_radius() - obj2.get_radius()) <= 5
 
 def explode(x, y, pl):
-    global lives
-    particles.extend([
-        Animation(x, y, random.randint(0, 360)), 
-        Animation(x, y, random.randint(0, 360)), 
-        Animation(x, y, random.randint(0, 360)), 
-        Animation(x, y, random.randint(0, 360)), 
-        Animation(x, y, random.randint(0, 360)), 
-        Animation(x, y, random.randint(0, 360)), 
-        Animation(x, y, random.randint(0, 360)), 
-        Animation(x, y, random.randint(0, 360))
-    ])
-    particles_times.extend([0, 0, 0, 0, 0, 0, 0, 0])
-    if pl:
+    global lives, game_running, reset, t
+    if pl and game_running and reset:
+        particles.extend([
+            Animation(x, y, random.randint(0, 360)), 
+            Animation(x, y, random.randint(0, 360)), 
+            Animation(x, y, random.randint(0, 360)), 
+            Animation(x, y, random.randint(0, 360)), 
+            Animation(x, y, random.randint(0, 360)), 
+            Animation(x, y, random.randint(0, 360)), 
+            Animation(x, y, random.randint(0, 360)), 
+            Animation(x, y, random.randint(0, 360))
+        ])
+        particles_times.extend([0, 0, 0, 0, 0, 0, 0, 0])
         lives -= 1
         lives_label.text = "Lives: " + str(lives)
-        player.x_pos = 999
-        player.y_pos = 999
+        empty_img = pyglet.image.load("res/empty.png")
+        player.player = pyglet.sprite.Sprite(empty_img, x=Constants.WINDOW_WIDTH // 2, y=Constants.WINDOW_HEIGHT // 2)
+        if lives == 0:
+            lives_label.text = ""
+            game_running = False
+        player.x_pos = Constants.WINDOW_WIDTH // 2
+        player.y_pos = Constants.WINDOW_HEIGHT // 2
+        player.x_speed = 0
+        player.y_speed = 0
+        player.rotation = 0
+        reset = False
+        t = time.time()
 
 @window.event
 def on_key_press(symbol, modifiers):
-    global game_started
-    global lives
-    if not game_started:
-        if symbol == key.ENTER:
-            game_started = True
-        else: 
-            return
-    if lives > 0:
-        if symbol == key.W:
-            player.thrust = True
-            player.toggle_sprite()
-            keys[0] = True
-        if symbol == key.A:
-            keys[1] = True
-        if symbol == key.D:
-            keys[2] = True
-        if symbol == key.SPACE:
-            bullets.append(Bullet(player.x_pos, player.y_pos, player.rotation))
-            bullet_times.append(0)
-        if symbol == key.R:
-            asteroids.append(
-                Rock(
-                    random.choice([random.randint(0, Constants.WINDOW_WIDTH//2-200), random.randint(Constants.WINDOW_WIDTH//2+200, Constants.WINDOW_WIDTH)]),
-                    random.choice([random.randint(0, Constants.WINDOW_HEIGHT//2-200), random.randint(Constants.WINDOW_HEIGHT//2+200, Constants.WINDOW_HEIGHT)]), 
-                    3, 
-                    random.choice([random.randint(-250, -30), random.randint(30, 250)]))
-            )
+    global lives, game_running, reset
+    if game_running:
+        if lives > 0 and reset:
+            if symbol == key.W:
+                player.thrust = True
+                player.toggle_sprite()
+                keys[0] = True
+            if symbol == key.A:
+                keys[1] = True
+            if symbol == key.D:
+                keys[2] = True
+            if symbol == key.SPACE:
+                bullets.append(Bullet(player.x_pos, player.y_pos, player.rotation))
+                bullet_times.append(0)
+            if symbol == key.R:
+                asteroids.append(
+                    Rock(
+                        random.choice([random.randint(0, Constants.WINDOW_WIDTH//2-200), random.randint(Constants.WINDOW_WIDTH//2+200, Constants.WINDOW_WIDTH)]),
+                        random.choice([random.randint(0, Constants.WINDOW_HEIGHT//2-200), random.randint(Constants.WINDOW_HEIGHT//2+200, Constants.WINDOW_HEIGHT)]), 
+                        3, 
+                        random.choice([random.randint(-250, -30), random.randint(30, 250)])
+                    )
+                )
+    else: 
+        if symbol == key.ENTER and lives > 0:
+            game_running = True
 
 @window.event
 def on_key_release(symbol, modifiers):
-    if not game_started:
-        return
-    if symbol == key.W:
-        player.thrust = False
-        player.toggle_sprite()
-        keys[0] = False
-    if symbol == key.A:
-        keys[1] = False
-    if symbol == key.D:
-        keys[2] = False
-
-global hidden
-hidden = True
-global t
-t = time.time()
+    if game_running and lives > 0:
+        if symbol == key.W:
+            player.thrust = False
+            player.toggle_sprite()
+            keys[0] = False
+        if symbol == key.A:
+            keys[1] = False
+        if symbol == key.D:
+            keys[2] = False
 
 def update(dt):
-    global hidden
-    global t
-    if not game_started:
+    global game_running, hidden, t, reset
+    print(reset)
+    if game_running:
+        if not reset and time.time() - t > 3: # 3 seconds
+            reset = True
+            player_img = pyglet.image.load("res/player.png")
+            player.player = pyglet.sprite.Sprite(player_img, x=Constants.WINDOW_WIDTH // 2, y=Constants.WINDOW_HEIGHT // 2)
+            player.x_pos = Constants.WINDOW_WIDTH // 2
+            player.y_pos = Constants.WINDOW_HEIGHT // 2
+            player.x_speed = 0
+            player.y_speed = 0
+            player.rotation = 0
+    else: 
         if time.time() - t > 1: # 1 second
             t = time.time()
             if hidden:
@@ -147,7 +166,8 @@ def update(dt):
                                 asteroids[i].x + 50,
                                 asteroids[i].y, 
                                 asteroids[i].level-1, 
-                                random.choice([random.randint(-250, -30), random.randint(30, 250)]))
+                                random.choice([random.randint(-250, -30), random.randint(30, 250)])
+                            )
                         )
                     explode(asteroids[i].x, asteroids[i].y, False)
                     asteroids.pop(i)
@@ -185,7 +205,7 @@ push_enter = pyglet.text.Label(
 def on_draw():
     global game_ended
     window.clear()
-    if game_started:
+    if game_running:
         if lives <= 0:
             print("GABE")
         else:
